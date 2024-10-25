@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -26,16 +25,6 @@ var app *tview.Application
 var minioClient *minio.Client
 var connectionList *tview.List
 var fileExplorer *tview.TreeView
-
-// Load saved connections from the current directory
-func loadConnections() []string {
-	files, err := filepath.Glob("*.connection")
-	if err != nil {
-		log.Printf("Error loading connections: %v", err)
-		return nil
-	}
-	return files
-}
 
 // Display feedback in a modal
 func showModal(message string, returnToForm bool, form *tview.Form) {
