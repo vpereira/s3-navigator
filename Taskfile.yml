@@ -1,0 +1,40 @@
+version: '3'
+
+tasks:
+  tidy:
+    desc: "mod tidy"
+    cmds:
+      - "go mod tidy"
+  # Task to build the project
+  build:
+    desc: "Build the S3 explorer"
+    cmds:
+      - "go build -o bin/s3exporer ."
+
+  # Task to clean up build artifacts
+  clean:
+    desc: "Clean up build artifacts"
+    cmds:
+      - "rm -rf bin/"
+
+  # Task to format Go code
+  format:
+    desc: "Format Go code using gofmt"
+    cmds:
+      - "gofmt -w ."
+
+  # Task to run tests
+  test:
+    desc: "Run tests"
+    cmds:
+      - "go test ./..."
+
+  # Task to run all tasks (build, format, and test)
+  all:
+    desc: "Run all tasks: clean, format, build, and test"
+    cmds:
+      - "task:clean"
+      - "task:format"
+      - "task:build"
+      - "task:test"
+

@@ -2,17 +2,14 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/rivo/tview"
 	"gopkg.in/yaml.v3"
 )
@@ -53,25 +50,6 @@ func showModal(message string, returnToForm bool, form *tview.Form) {
 			}
 		})
 	app.SetRoot(modal, true)
-}
-
-// Connect to the S3 service
-func connectToS3(info ConnectionInformation) error {
-	customTransport := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: info.IgnoreSSLVerification,
-		},
-	}
-	customHTTPClient := &http.Client{Transport: customTransport}
-
-	// Initialize MinIO client
-	var err error
-	minioClient, err = minio.New(info.Endpoint, &minio.Options{
-		Creds:     credentials.NewStaticV4(info.AccessKey, info.SecretKey, ""),
-		Secure:    true,
-		Transport: customHTTPClient.Transport,
-	})
-	return err
 }
 
 // Function to add child nodes to the TreeNode for S3 objects
