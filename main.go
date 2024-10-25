@@ -191,7 +191,6 @@ func saveConnection(info ConnectionInformation) error {
 	return encoder.Encode(info)
 }
 
-// Update the connection logic in mainLayout() to call showFileExplorer with the correct bucket name
 func mainLayout() *tview.Flex {
 	connectionList = tview.NewList()
 	connectionList.SetBorder(true).SetTitle("Connections (Press C to Connect)")
@@ -231,14 +230,23 @@ func mainLayout() *tview.Flex {
 	fileExplorer = tview.NewTreeView()
 	fileExplorer.SetBorder(true).SetTitle("File Explorer")
 
+	buttonsTable := tview.NewTable().SetBorders(true)
+	buttonsTable.SetCell(0, 0, tview.NewTableCell("Quit").SetAlign(tview.AlignCenter).SetSelectable(false))
+	buttonsTable.SetCell(0, 1, tview.NewTableCell("Add Connection").SetAlign(tview.AlignCenter).SetSelectable(false))
+	// quitButton.SetBackgroundColor(tcell.ColorDefault)
+	// newConnectionButton := tview.NewButton("Add Connection").SetSelectedFunc(showConnectionForm)
 	buttons := tview.NewFlex().
-		AddItem(tview.NewButton("New Connection").SetSelectedFunc(showConnectionForm), 0, 1, true).
-		AddItem(tview.NewButton("Quit").SetSelectedFunc(func() { app.Stop() }), 0, 1, true)
+		AddItem(buttonsTable, 0, 1, false) // Only text is green
 
-	mainFlex := tview.NewFlex().
+	// Combine connection list and file explorer in a horizontal flex
+	contentFlex := tview.NewFlex().
 		AddItem(connectionList, 0, 1, true).
-		AddItem(fileExplorer, 0, 2, false).
-		AddItem(buttons, 1, 1, false)
+		AddItem(fileExplorer, 0, 2, false)
+
+	// Main layout with content and buttons at the bottom
+	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(contentFlex, 0, 1, true). // Main content
+		AddItem(buttons, 3, 1, false)     // Buttons at the bottom
 
 	// Input capture to navigate between panels
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -249,6 +257,12 @@ func mainLayout() *tview.Flex {
 				return nil
 			case tcell.KeyRight:
 				app.SetFocus(fileExplorer) // Focus on the file explorer
+				return nil
+			case tcell.KeyDown:
+				app.SetFocus(buttons) // Focus on the buttons area
+				return nil
+			case tcell.KeyUp:
+				app.SetFocus(contentFlex) // Move back to main content
 				return nil
 			}
 		}
