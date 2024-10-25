@@ -143,6 +143,7 @@ func showConnectionForm() {
 	app.SetRoot(form, true)
 }
 
+
 func mainLayout() *tview.Flex {
 	connectionList = tview.NewList()
 	connectionList.SetBorder(true).SetTitle("Connections (Press C to Connect)")
@@ -182,23 +183,27 @@ func mainLayout() *tview.Flex {
 	fileExplorer = tview.NewTreeView()
 	fileExplorer.SetBorder(true).SetTitle("File Explorer")
 
-	buttonsTable := tview.NewTable().SetBorders(true)
-	buttonsTable.SetCell(0, 0, tview.NewTableCell("Quit").SetAlign(tview.AlignCenter).SetSelectable(false))
-	buttonsTable.SetCell(0, 1, tview.NewTableCell("Add Connection").SetAlign(tview.AlignCenter).SetSelectable(false))
-	// quitButton.SetBackgroundColor(tcell.ColorDefault)
-	// newConnectionButton := tview.NewButton("Add Connection").SetSelectedFunc(showConnectionForm)
-	buttons := tview.NewFlex().
-		AddItem(buttonsTable, 0, 1, false) // Only text is green
+	buttonsForm := tview.NewForm().
+		AddButton("Quit", func() { app.Stop() }).
+		AddButton("Add Connection", showConnectionForm)
 
-	// Combine connection list and file explorer in a horizontal flex
+	// Style the form buttons if needed (optional)
+	buttonsForm.GetButton(0).SetLabelColor(tcell.ColorRed)   // Quit button
+	buttonsForm.GetButton(1).SetLabelColor(tcell.ColorGreen) // Add Connection button
+
+	// Bottom flex containing only the buttonsForm
+	bottomFlex := tview.NewFlex().
+		AddItem(buttonsForm, 0, 1, true)
+
+	// Horizontal flex with connection list (1/3 width) and file explorer (2/3 width)
 	contentFlex := tview.NewFlex().
-		AddItem(connectionList, 0, 1, true).
-		AddItem(fileExplorer, 0, 2, false)
+		AddItem(connectionList, 0, 1, true). // 1/3 width
+		AddItem(fileExplorer, 0, 2, false)  // 2/3 width
 
-	// Main layout with content and buttons at the bottom
+	// Main layout with content and buttons at the bottom, matching the nested structure
 	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(contentFlex, 0, 1, true). // Main content
-		AddItem(buttons, 3, 1, false)     // Buttons at the bottom
+		AddItem(contentFlex, 0, 3, true).  // Main content area with nested structure
+		AddItem(bottomFlex, 0, 1, false)   // Fixed height for bottom flex to ensure buttons display
 
 	// Input capture to navigate between panels
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -211,7 +216,7 @@ func mainLayout() *tview.Flex {
 				app.SetFocus(fileExplorer) // Focus on the file explorer
 				return nil
 			case tcell.KeyDown:
-				app.SetFocus(buttons) // Focus on the buttons area
+				app.SetFocus(bottomFlex) // Focus on the buttons area
 				return nil
 			case tcell.KeyUp:
 				app.SetFocus(contentFlex) // Move back to main content
@@ -223,6 +228,7 @@ func mainLayout() *tview.Flex {
 
 	return mainFlex
 }
+
 
 func main() {
 	app = tview.NewApplication()
