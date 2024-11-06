@@ -92,6 +92,21 @@ func showFileExplorer(bucketName string) {
 			node.SetExpanded(!node.IsExpanded())
 		}
 	})
+
+	// Capture 'i' key to display file information
+	fileExplorer.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyRune && event.Rune() == 'i' {
+			// Get selected file node information
+			node := fileExplorer.GetCurrentNode()
+			ref := node.GetReference()
+			if ref != nil {
+				fileKey := ref.(string)
+				displayFileInfo(bucketName, fileKey) // Display file info modal
+			}
+			return nil
+		}
+		return event
+	})
 }
 
 // Form for creating a new connection
@@ -135,12 +150,42 @@ func showConnectionForm() {
 	app.SetRoot(form, true)
 }
 
+// Function to display file information in a modal
+func displayFileInfo(bucketName, fileKey string) {
+	ctx := context.Background()
+
+	// Fetch object information
+	objInfo, err := minioClient.StatObject(ctx, bucketName, fileKey, minio.StatObjectOptions{})
+	if err != nil {
+		showModal(fmt.Sprintf("Failed to get file info: %v", err), false, nil)
+		return
+	}
+
+	// Prepare file information details
+	infoText := fmt.Sprintf(
+		"File: %s\nSize: %d bytes\nLast Modified: %s\nETag: %s",
+		objInfo.Key,
+		objInfo.Size,
+		objInfo.LastModified.Format("2006-01-02 15:04:05"),
+		objInfo.ETag,
+	)
+
+	// Display file information in a modal
+	modal := tview.NewModal().
+		SetText(infoText).
+		AddButtons([]string{"OK"}).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			app.SetRoot(mainLayout(), true)
+		})
+	app.SetRoot(modal, true)
+}
+
 func mainLayout() *tview.Flex {
 	connectionList = tview.NewList()
-	connectionList.SetBorder(true).SetTitle("Connections (Press C to Connect)")
+	connectionList.SetBorder(true).SetTitle("Connections (Press ENTER to Connect)")
 
 	for _, file := range loadConnections() {
-		connectionList.AddItem(file, "", 'c', func(filename string) func() {
+		connectionList.AddItem(file, "", 0, func(filename string) func() {
 			return func() {
 				content, err := os.ReadFile(filename)
 				if err != nil {
