@@ -13,14 +13,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type ConnectionInformation struct {
-	Name                  string `yaml:"name"`
-	Endpoint              string `yaml:"endpoint"`
-	AccessKey             string `yaml:"access_key"`
-	SecretKey             string `yaml:"secret_key"`
-	IgnoreSSLVerification bool   `yaml:"ignore_ssl_verification"`
-}
-
 var app *tview.Application
 var minioClient *minio.Client
 var connectionList *tview.List
@@ -143,7 +135,6 @@ func showConnectionForm() {
 	app.SetRoot(form, true)
 }
 
-
 func mainLayout() *tview.Flex {
 	connectionList = tview.NewList()
 	connectionList.SetBorder(true).SetTitle("Connections (Press C to Connect)")
@@ -198,12 +189,12 @@ func mainLayout() *tview.Flex {
 	// Horizontal flex with connection list (1/3 width) and file explorer (2/3 width)
 	contentFlex := tview.NewFlex().
 		AddItem(connectionList, 0, 1, true). // 1/3 width
-		AddItem(fileExplorer, 0, 2, false)  // 2/3 width
+		AddItem(fileExplorer, 0, 2, false)   // 2/3 width
 
 	// Main layout with content and buttons at the bottom, matching the nested structure
 	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(contentFlex, 0, 3, true).  // Main content area with nested structure
-		AddItem(bottomFlex, 0, 1, false)   // Fixed height for bottom flex to ensure buttons display
+		AddItem(contentFlex, 0, 3, true). // Main content area with nested structure
+		AddItem(bottomFlex, 0, 1, false)  // Fixed height for bottom flex to ensure buttons display
 
 	// Input capture to navigate between panels
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -228,7 +219,6 @@ func mainLayout() *tview.Flex {
 
 	return mainFlex
 }
-
 
 func main() {
 	app = tview.NewApplication()
