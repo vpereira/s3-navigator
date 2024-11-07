@@ -93,20 +93,67 @@ func showFileExplorer(bucketName string) {
 		}
 	})
 
-	// Capture 'i' key to display file information
+	// Capture 'i' key to display file information and 'a' to add a directory
 	fileExplorer.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyRune && event.Rune() == 'i' {
-			// Get selected file node information
-			node := fileExplorer.GetCurrentNode()
-			ref := node.GetReference()
-			if ref != nil {
-				fileKey := ref.(string)
-				displayFileInfo(bucketName, fileKey) // Display file info modal
-			}
+		node := fileExplorer.GetCurrentNode()
+		ref := node.GetReference()
+
+		if event.Key() == tcell.KeyRune && event.Rune() == 'i' && ref != nil {
+			// Show information about the selected file
+			fileKey := ref.(string)
+			displayFileInfo(bucketName, fileKey)
 			return nil
 		}
+
+		if event.Key() == tcell.KeyRune && event.Rune() == 'a' && ref != nil {
+			// Add a directory under the selected node
+			dirKey := ref.(string)
+			showAddDirectoryDialog(bucketName, dirKey, node)
+			return nil
+		}
+
 		return event
 	})
+}
+
+// Function to display a dialog for adding a new directory
+func showAddDirectoryDialog(bucketName, parentDir string, parentNode *tview.TreeNode) {
+	// Create a form with an input field for the new directory name
+	form := tview.NewForm()
+	form.AddInputField("New Directory Name:", "", 30, nil, nil).
+		AddButton("OK", func() {
+			dirName := form.GetFormItemByLabel("New Directory Name:").(*tview.InputField).GetText()
+			if dirName != "" {
+				createNewDirectory(bucketName, parentDir, dirName, parentNode)
+			}
+			app.SetRoot(mainLayout(), true)
+		}).
+		AddButton("Cancel", func() {
+			app.SetRoot(mainLayout(), true)
+		})
+
+	form.SetBorder(true).SetTitle("Add Directory").SetTitleAlign(tview.AlignCenter)
+
+	// Display the form in place of the main layout
+	app.SetRoot(form, true)
+}
+
+// Function to create a new directory in the S3 bucket
+func createNewDirectory(bucketName, parentDir, dirName string, parentNode *tview.TreeNode) {
+	ctx := context.Background()
+	newDirPath := fmt.Sprintf("%s%s/", parentDir, dirName) // S3 folder is indicated by trailing slash
+
+	// Create a new empty object with a trailing slash to represent a folder in S3
+	_, err := minioClient.PutObject(ctx, bucketName, newDirPath, strings.NewReader(""), 0, minio.PutObjectOptions{})
+	if err != nil {
+		showModal(fmt.Sprintf("Failed to create directory: %v", err), false, nil)
+		return
+	}
+
+	// Add the new directory to the tree
+	newDirNode := tview.NewTreeNode(dirName + "/").SetReference(newDirPath).SetColor(tcell.ColorGreen).SetSelectable(true)
+	parentNode.AddChild(newDirNode)
+	parentNode.SetExpanded(true)
 }
 
 // Form for creating a new connection
