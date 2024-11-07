@@ -67,55 +67,6 @@ func addObjectsToTree(target *tview.TreeNode, bucketName, prefix string) {
 	}
 }
 
-// Function to display the file explorer within the right panel
-func showFileExplorer(bucketName string) {
-	// Set up root node for the selected bucket
-	root := tview.NewTreeNode(bucketName).SetColor(tcell.ColorLavender)
-	fileExplorer.SetRoot(root).SetCurrentNode(root)
-
-	// Load root-level objects in the bucket
-	addObjectsToTree(root, bucketName, "")
-
-	// Expand folders and load children when selected
-	fileExplorer.SetSelectedFunc(func(node *tview.TreeNode) {
-		ref := node.GetReference()
-		if ref == nil {
-			return
-		}
-
-		// If this is a folder (S3 prefix), load its contents if not loaded yet
-		if strings.HasSuffix(ref.(string), "/") {
-			children := node.GetChildren()
-			if len(children) == 0 {
-				addObjectsToTree(node, bucketName, ref.(string))
-			}
-			node.SetExpanded(!node.IsExpanded())
-		}
-	})
-
-	// Capture 'i' key to display file information and 'a' to add a directory
-	fileExplorer.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		node := fileExplorer.GetCurrentNode()
-		ref := node.GetReference()
-
-		if event.Key() == tcell.KeyRune && event.Rune() == 'i' && ref != nil {
-			// Show information about the selected file
-			fileKey := ref.(string)
-			displayFileInfo(bucketName, fileKey)
-			return nil
-		}
-
-		if event.Key() == tcell.KeyRune && event.Rune() == 'a' && ref != nil {
-			// Add a directory under the selected node
-			dirKey := ref.(string)
-			showAddDirectoryDialog(bucketName, dirKey, node)
-			return nil
-		}
-
-		return event
-	})
-}
-
 // Function to display a dialog for adding a new directory
 func showAddDirectoryDialog(bucketName, parentDir string, parentNode *tview.TreeNode) {
 	// Create a form with an input field for the new directory name
@@ -225,6 +176,55 @@ func displayFileInfo(bucketName, fileKey string) {
 			app.SetRoot(mainLayout(), true)
 		})
 	app.SetRoot(modal, true)
+}
+
+// Function to display the file explorer within the right panel
+func showFileExplorer(bucketName string) {
+	// Set up root node for the selected bucket
+	root := tview.NewTreeNode(bucketName).SetColor(tcell.ColorLavender)
+	fileExplorer.SetRoot(root).SetCurrentNode(root)
+
+	// Load root-level objects in the bucket
+	addObjectsToTree(root, bucketName, "")
+
+	// Expand folders and load children when selected
+	fileExplorer.SetSelectedFunc(func(node *tview.TreeNode) {
+		ref := node.GetReference()
+		if ref == nil {
+			return
+		}
+
+		// If this is a folder (S3 prefix), load its contents if not loaded yet
+		if strings.HasSuffix(ref.(string), "/") {
+			children := node.GetChildren()
+			if len(children) == 0 {
+				addObjectsToTree(node, bucketName, ref.(string))
+			}
+			node.SetExpanded(!node.IsExpanded())
+		}
+	})
+
+	// Capture 'i' key to display file information and 'a' to add a directory
+	fileExplorer.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		node := fileExplorer.GetCurrentNode()
+		ref := node.GetReference()
+
+		if event.Key() == tcell.KeyRune && event.Rune() == 'i' && ref != nil {
+			// Show information about the selected file
+			fileKey := ref.(string)
+			displayFileInfo(bucketName, fileKey)
+			return nil
+		}
+
+		if event.Key() == tcell.KeyRune && event.Rune() == 'a' && ref != nil {
+			// Add a directory under the selected node
+			dirKey := ref.(string)
+			showAddDirectoryDialog(bucketName, dirKey, node)
+			return nil
+		}
+
+		return event
+	})
 }
 
 func mainLayout() *tview.Flex {
