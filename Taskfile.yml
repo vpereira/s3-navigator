@@ -9,7 +9,7 @@ tasks:
   build:
     desc: "Build the S3 explorer"
     cmds:
-      - "go build -o bin/s3exporer ."
+      - "go build -o bin/s3explorer ."
 
   # Task to clean up build artifacts
   clean:
