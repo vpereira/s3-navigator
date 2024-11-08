@@ -18,21 +18,6 @@ var minioClient *minio.Client
 var connectionList *tview.List
 var fileExplorer *tview.TreeView
 
-// Display feedback in a modal
-func showModal(message string, returnToForm bool, form *tview.Form) {
-	modal := tview.NewModal().
-		SetText(message).
-		AddButtons([]string{"OK"}).
-		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-			if returnToForm && form != nil {
-				app.SetRoot(form, true)
-			} else {
-				app.SetRoot(mainLayout(), true)
-			}
-		})
-	app.SetRoot(modal, true)
-}
-
 // Function to add child nodes to the TreeNode for S3 objects
 func addObjectsToTree(target *tview.TreeNode, bucketName, prefix string) {
 	ctx := context.Background()
